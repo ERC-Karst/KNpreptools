@@ -1,0 +1,26 @@
+name: knpreptools
+channels:
+  - defaults
+  - conda-forge
+  - agd-lbr
+  - anaconda
+dependencies:
+  - python
+  - geopandas
+  - numpy
+  - pandas
+  - matplotlib
+  - pyyaml
+  - scipy
+  - plotly
+  - shapely
+  - networkx
+  - mplstereonet
+  - pyvista
+  - jupyter
+  - jupyterlab
+  - sphinx
+  - numpydoc
+  # - os
+  - pip
+
