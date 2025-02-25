@@ -24,3 +24,25 @@ The tools were initialy made for networkx graph created from Therion SQL databas
 - HTML (Todo)
 - .csv files
 - nx pickled graphs
+
+
+# Package name ideas:
+
+- KarstGraphUtils
+- CaveNetworkTools
+- GraphProcessingPy
+- KarstNetUtils
+- CaveGraphTools
+- ~~NetworkKarstPy~~
+- ProcessingCaveUtils
+- GraphNetTools
+- ~~KarstProcessingPy~~
+- ~~CaveUtilsPy~~
+- ProcessingCaveNetwork
+- KarstGraphProcessing
+- nxCaveProcessing
+- nxCaveTools
+- nxCave
+- nxcavetools
+- nxcaveprocessing
+
