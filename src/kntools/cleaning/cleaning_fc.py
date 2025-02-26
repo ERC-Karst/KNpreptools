@@ -1,5 +1,6 @@
 import networkx as nx
 import numpy as np
+# import kntools as kt
 
 
 
@@ -384,3 +385,49 @@ def get_potential_connection(
 
     return out
 # ----------------------------------------------------------------------------
+
+def find_disconnected_node(G, H):
+    """Identify node of degree one that were initially of degree 2 or more at an earlier stage of the cleaning process
+
+    Parameters
+    ----------
+    G : networkx graph
+        Graph exported from therion, containing all the data
+    H : networkx graph
+        Graph without the surface and duplicate shots
+
+    Returns
+    -------
+    list
+        list of disconnected node ids
+    """    
+    # G_raw = load_raw_therion_data(basename)    
+    # G = load_therion_without_flagged_edges(basename)
+    print( 'There is ', nx.number_connected_components(G), 'connected components in the original graph')
+    print( 'There is ', nx.number_connected_components(H), 'connected components in the graph without flagged edges')
+    
+    closeby_all = []
+    keys_disconnected_all =[]
+    
+    #cc_number = 0
+    if nx.is_connected(H) == False:
+        #iterate through the connectec components to find nodes where disconnection occured
+        #search for the nodes that used to be degree >1 and are now degree 1.
+        for i, subgraph_index in enumerate(nx.connected_components(H)):
+            #print(i,subgraph_index )
+            subgraph = nx.subgraph(H, subgraph_index)
+
+            keys_disconnected_subgraph=[]   
+            #find all the nodes where disconnection happened
+            #look for all the nodes degree smaller in the cleaned file than in the original file 
+            #keys_disconnected_subgraph = [k for k, v in dict(subgraph.degree()).items() if v == 1 and G_raw.degree()[k] >1]   
+            for k in subgraph.nodes(): #dict(subgraph.degree()).items():
+                #print(k)
+                if subgraph.degree()[k]==1 and G.degree()[k] >1:
+                    keys_disconnected_subgraph.append(k)
+
+                
+            keys_disconnected_all = keys_disconnected_all + keys_disconnected_subgraph
+        return keys_disconnected_all
+    else:
+        print('There is no disconnected components, no need to merge')

@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from shapely.geometry import Point, LineString
-import knpreptools as pr
+import kntools as kt
 
 
 
@@ -331,7 +331,7 @@ def nx2json(G,outputpath):
 
 def save_attribrutes_df_to_csv(G, outputpath, cavename='cavename'):
     #check and create new directory if necessary
-    filepath = pr.make_filepath(outputpath,'clean_graph_csv')
+    filepath = kt.make_filepath(outputpath,'clean_graph_csv')
     # cavename = G.graph['cavename']
        
     #save edges and flags
@@ -340,11 +340,11 @@ def save_attribrutes_df_to_csv(G, outputpath, cavename='cavename'):
     print('saved edge list to ', filepath , cavename , '_edges.csv')
     
     #load and save all the existing NODE attribute names for this graph
-    attribute_names = get_nodes_attributes(G)
+    attribute_names = kt.get_nodes_attributes(G)
     if len(attribute_names)==1:
         attribute_names = [attribute_names]
     for attribute_name in attribute_names:        
-        df = pr.attribute_dict_to_df(G,attribute_name, 'node')
+        df = kt.attribute_dict_to_df(G,attribute_name, 'node')
         if attribute_name=='pos' or attribute_name=='splays' or attribute_name=='splaylegs' or attribute_name=='splaylrud' :
             df.to_csv(filepath + cavename + '_node_' + attribute_name + '.csv', index=False, header=['id','x','y','z'], sep=';')   
         elif attribute_name=='csdim':
@@ -360,9 +360,9 @@ def save_attribrutes_df_to_csv(G, outputpath, cavename='cavename'):
         # print('saved node attribute', attribute_name, ' to ', filepath, cavename, '_node_' , attribute_name , '.csv')
     
     #load and save all the existing EDGE attribute names for this graph
-    attribute_names = pr.get_edges_attributes(G)
+    attribute_names = kt.get_edges_attributes(G)
     for attribute_name in attribute_names:
-        df = pr.attribute_dict_to_df(G,attribute_name, 'edge')
+        df = kt.attribute_dict_to_df(G,attribute_name, 'edge')
         if attribute_name=='flags':
             df.to_csv(filepath + cavename + '_edge_' + attribute_name + '.csv', index=False, header=['from_id','to_id','flag'], sep=';')   
   

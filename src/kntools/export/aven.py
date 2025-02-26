@@ -11,13 +11,13 @@ import datetime
 # import os
 import subprocess
 # from os.path import normpath
-import knpreptools as pr
+import kntools as kt
 
 
 def nx2aven3d(G,  outputpath):
    
-    H = pr.remove_flagged_edges(G)
-    pos3d = pr.get_pos3d(G)
+    H = kt.remove_flagged_edges(G)
+    pos3d = kt.get_pos3d(G)
 
     # if manual_edges_file:
     #     #Extract data from manual edge file
@@ -76,7 +76,7 @@ def nx2aven3d(G,  outputpath):
     ######################
     # portion of the text containing the point for the disconnected nodes
     #comment how I find disconnected nodes. what is the logic
-    disconnected_nodes_id = pr.find_disconnected_node(G, H)
+    disconnected_nodes_id = kt.find_disconnected_node(G, H)
     if disconnected_nodes_id is not None:
         strings_disconnected_nodes = []
 
@@ -227,7 +227,7 @@ def nx2aven3d(G,  outputpath):
     # if not isExist:
     #    os.makedirs(filepath)
 
-    filepath = pr.make_filepath(outputpath,'visualization/connectected_components_3d')
+    filepath = kt.make_filepath(outputpath,'visualization/connectected_components_3d')
 
 
     # if outputpath[-1] == '/':
@@ -393,7 +393,7 @@ def nx2section3d(G,outputpath,list_sections=[]):
 
     cavename = G.graph['cavename']
 
-    pos3d = pr.get_pos3d(G)
+    pos3d = kt.get_pos3d(G)
     
     survey_text = []
     

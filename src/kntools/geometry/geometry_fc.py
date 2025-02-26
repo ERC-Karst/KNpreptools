@@ -1,6 +1,6 @@
 import numpy as np
 import networkx as nx
-import knpreptools as pr
+import kntools as kt
 
 def calc_projected_splay(conduit_direction,splay_direction):
     """Projects a splay (disto measurement from a station to the surrounding wall) 
@@ -61,7 +61,7 @@ def get_conduit_direction(G):
         # calc w at the beginning  and end of a conduit
         if degree == 1:           
             #if node is the start or end of the cave
-            neighbors = pr.find_neighbors(G,key)#[n for n in G.neighbors(key)]
+            neighbors = kt.find_neighbors(G,key)#[n for n in G.neighbors(key)]
             conduit_directions[key] = np.array(G.nodes('pos')[key]) - np.array(G.nodes('pos')[neighbors[0]])   
             if all(v == 0 for v in conduit_directions[key]): print(conduit_directions[key])        
 
@@ -95,7 +95,7 @@ def get_splay_direction(G):
     splays_direction = {} 
     splays = dict(G.nodes('splays'))
     keys = list(splays.keys())
-    pos3d = pr.get_pos3d(G)
+    pos3d = kt.get_pos3d(G)
     for key in keys:
     #calculate the splay direction relative to its node
         #if the node exists. some nodes were survey duplicate, removed from the main graph

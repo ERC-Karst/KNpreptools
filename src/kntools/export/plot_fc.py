@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 import pyvista as pv
+import kntools as kt
 
 
 # =============================================================================
@@ -93,7 +94,7 @@ def plot3d_identify_disconnection(G, H, keys_manual=[] , filename='graph3d', sho
             lines_reco_manual = np.array([H.nodes('pos')[i] for i in np.hstack(keys_manual)])    
             pl.add_lines(lines_reco_manual, color='red', width=6, connected=False)
             
-        disco_keys = pr.find_disconnected_node(G, H) 
+        disco_keys = kt.find_disconnected_node(G, H) 
         if disco_keys:       
             points_disco = np.array([H.nodes('pos')[i] for i in disco_keys])
             pl.add_points(points_disco, render_points_as_spheres=True, point_size=15, color='red')
