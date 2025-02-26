@@ -22,6 +22,7 @@ import networkx as nx
 # import matplotlib.pyplot as plt
 # import sqlite3
 import pandas as pd
+import knpreptools as pr
 
 
 
@@ -263,26 +264,7 @@ def from_therion_sql_enhanced(  inputfile,
     from sqlite3 import OperationalError
     import sys
 
-    def list2dict(key_list, value_list):
-        """Transform list to dictionnary by regouping values in list for identical keys. 
-        Using dictionnary comprehension.
 
-        Parameters
-        ----------
-        key_list : list
-            Dictionnary keys. Usually a list of int
-        value_list : list
-            Dictionnary values. Can be a list of int, flot, array, or list.
-
-        Returns
-        -------
-        dictionnary
-
-        """
-        
-        return {key : [value_list[idx] 
-                for idx in range(len(value_list)) if key_list[idx]== key]
-                for key in set(key_list)}
 
     def read_sql_file(basename):
         """
@@ -354,7 +336,7 @@ def from_therion_sql_enhanced(  inputfile,
                 return id_from,id_to,values
 
             if return_type == 'dictionnary':
-                return list2dict(keys, values) #dict(zip(keys, values))
+                return pr.list2dict(keys, values) #dict(zip(keys, values))
 
         elif type == 'station':
             try:
@@ -373,7 +355,7 @@ def from_therion_sql_enhanced(  inputfile,
                 return keys,values
 
             if return_type == 'dictionnary':
-                return list2dict(keys, values) #dict(zip(keys, values))
+                return pr.list2dict(keys, values) #dict(zip(keys, values))
 
 
     #########################################
@@ -582,14 +564,14 @@ def from_therion_sql_enhanced(  inputfile,
     #######
     print(f'Therion Import -- add splays -- {(time.time() - start_time)}s') 
     list_splays_newi = [index_dict.get(item, item)  for item in list_splays_oldi]
-    dict_splays = list2dict(list_splays_newi, list_splays_pos)
+    dict_splays = pr.list2dict(list_splays_newi, list_splays_pos)
     nx.set_node_attributes(G, dict_splays, 'splays') 
 
     #TREE
     #####
     print(f'Therion Import -- add fulladdress -- {(time.time() - start_time)}s')
     list_tree_newi = [index_dict.get(item, item)  for item in list_tree_oldi]
-    dict_tree = list2dict(list_tree_newi, list_tree_values)
+    dict_tree = pr.list2dict(list_tree_newi, list_tree_values)
     nx.set_node_attributes(G, dict_tree, 'fulladdress') 
 
 
@@ -602,7 +584,7 @@ def from_therion_sql_enhanced(  inputfile,
     print('Therion Import -- add flags') 
     list_node_flag_oldi, list_node_flag_values = extract_flags(c,'station', return_type='lists')
     list_node_flag_newi = [index_dict.get(item, item)  for item in list_node_flag_oldi]
-    dict_node_flag = list2dict(list_node_flag_newi, list_node_flag_values)
+    dict_node_flag = pr.list2dict(list_node_flag_newi, list_node_flag_values)
     nx.set_node_attributes(G, dict_node_flag, 'flag') 
     
     #add potential edge flags
@@ -612,7 +594,7 @@ def from_therion_sql_enhanced(  inputfile,
     from_edge_flag_oldi, to_edge_flag_oldi, list_edge_flag_values = extract_flags(c,'shot', return_type='lists')   
     list_from_edge_flag_newi = [index_dict.get(item, item)  for item in from_edge_flag_oldi]
     list_to_edge_flag_newi = [index_dict.get(item, item)  for item in to_edge_flag_oldi]
-    dict_edge_flag = list2dict(list(zip(list_from_edge_flag_newi,list_to_edge_flag_newi)), list_edge_flag_values)
+    dict_edge_flag = pr.list2dict(list(zip(list_from_edge_flag_newi,list_to_edge_flag_newi)), list_edge_flag_values)
     nx.set_edge_attributes(G, dict_edge_flag, 'flags') 
     
 
@@ -675,7 +657,7 @@ def load_clean_graph_csv(inputpath):
             print('loading',file)
             df = pd.read_csv(f'{inputpath}{sep}{file}', delimiter=';')
             #create the graph with the edges
-            dict_attribute = cl.list2dict(zip(df.from_id,df.to_id),df.flag)
+            dict_attribute = pr.list2dict(zip(df.from_id,df.to_id),df.flag)
             nx.set_edge_attributes(G, dict_attribute,'flags')
 
         # load node attributes
@@ -692,20 +674,20 @@ def load_clean_graph_csv(inputpath):
                 dict_attribute = dict(zip(df.id,zip(df.cswidth,df.csheight)))  
 
             elif attribute_name == 'flags':
-                #use list2dict() when mulitple entries per nodes
-                dict_attribute = cl.list2dict(df.id,df.flag)   
+                #use pr.list2dict() when mulitple entries per nodes
+                dict_attribute = pr.list2dict(df.id,df.flag)   
 
             elif attribute_name == 'fulladdress':
-                dict_attribute = cl.list2dict(df.id,df.fulladdress)   
+                dict_attribute = pr.list2dict(df.id,df.fulladdress)   
 
             elif attribute_name == 'idsql':
-                dict_attribute = cl.list2dict(df.id,df.idsql)   
+                dict_attribute = pr.list2dict(df.id,df.idsql)   
 
             elif attribute_name == 'splays':
-                dict_attribute = cl.list2dict(df.id,list(zip(df.x,df.y,df.z)))   
+                dict_attribute = pr.list2dict(df.id,list(zip(df.x,df.y,df.z)))   
 
             elif attribute_name == 'comments':
-                dict_attribute = cl.list2dict(df.id,df.comment)   
+                dict_attribute = pr.list2dict(df.id,df.comment)   
         
             nx.set_node_attributes(G,dict_attribute,attribute_name)  
 

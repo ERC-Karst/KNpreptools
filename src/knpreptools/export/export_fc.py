@@ -1,7 +1,9 @@
 import os
 import networkx as nx
 import numpy as np
+import pandas as pd
 from shapely.geometry import Point, LineString
+import knpreptools as pr
 
 
 
@@ -11,7 +13,8 @@ def to_shp(positions,
            type,
            outputdir='',
            name=''):
-    """_summary_
+    """_Export nodes and edges to two separate shapefiles for Gis visualization. 
+    Requires the field 'pos' as an attribute of the graph. pos must be a list of three values x,y,z, or at least x,y
 
     Parameters
     ----------
@@ -295,51 +298,7 @@ def export_to_gocad(G,
 
 
 
-def find_disconnected_node(G, H):
-    """Identify node of degree one that were initially of degree 2 or more at an earlier stage of the cleaning process
 
-    Parameters
-    ----------
-    G : networkx graph
-        Graph exported from therion, containing all the data
-    H : networkx graph
-        Graph without the surface and duplicate shots
-
-    Returns
-    -------
-    list
-        list of disconnected node ids
-    """    
-    # G_raw = load_raw_therion_data(basename)    
-    # G = load_therion_without_flagged_edges(basename)
-    print( 'There is ', nx.number_connected_components(G), 'connected components in the original graph')
-    print( 'There is ', nx.number_connected_components(H), 'connected components in the graph without flagged edges')
-    
-    closeby_all = []
-    keys_disconnected_all =[]
-    
-    #cc_number = 0
-    if nx.is_connected(H) == False:
-        #iterate through the connectec components to find nodes where disconnection occured
-        #search for the nodes that used to be degree >1 and are now degree 1.
-        for i, subgraph_index in enumerate(nx.connected_components(H)):
-            #print(i,subgraph_index )
-            subgraph = nx.subgraph(H, subgraph_index)
-
-            keys_disconnected_subgraph=[]   
-            #find all the nodes where disconnection happened
-            #look for all the nodes degree smaller in the cleaned file than in the original file 
-            #keys_disconnected_subgraph = [k for k, v in dict(subgraph.degree()).items() if v == 1 and G_raw.degree()[k] >1]   
-            for k in subgraph.nodes(): #dict(subgraph.degree()).items():
-                #print(k)
-                if subgraph.degree()[k]==1 and G.degree()[k] >1:
-                    keys_disconnected_subgraph.append(k)
-
-                
-            keys_disconnected_all = keys_disconnected_all + keys_disconnected_subgraph
-        return keys_disconnected_all
-    else:
-        print('There is no disconnected components, no need to merge')
 
 
 #EXPORT TO JSON
@@ -367,5 +326,84 @@ def nx2json(G,outputpath):
     with open(filepath + G.graph['cavename'] + '.json', 'w') as f:
         f.write('\n'.join(json_text))
 
+#------------------------------------------------------------------
+#function specific to sql import
+
+def save_attribrutes_df_to_csv(G, outputpath, cavename='cavename'):
+    #check and create new directory if necessary
+    filepath = pr.make_filepath(outputpath,'clean_graph_csv')
+    # cavename = G.graph['cavename']
+       
+    #save edges and flags
+    # nx.write_edgelist(G, filepath + cavename + '_edges.csv', data=False)
+    pd.DataFrame(G.edges()).to_csv(filepath + cavename + '_edges.csv', index=False, header = ['from_id','to_id'], sep=';')    
+    print('saved edge list to ', filepath , cavename , '_edges.csv')
+    
+    #load and save all the existing NODE attribute names for this graph
+    attribute_names = get_nodes_attributes(G)
+    if len(attribute_names)==1:
+        attribute_names = [attribute_names]
+    for attribute_name in attribute_names:        
+        df = pr.attribute_dict_to_df(G,attribute_name, 'node')
+        if attribute_name=='pos' or attribute_name=='splays' or attribute_name=='splaylegs' or attribute_name=='splaylrud' :
+            df.to_csv(filepath + cavename + '_node_' + attribute_name + '.csv', index=False, header=['id','x','y','z'], sep=';')   
+        elif attribute_name=='csdim':
+            df.to_csv(filepath + cavename + '_node_' + attribute_name + '.csv', index=False, header=['id','cswidth','csheight'], sep=';')   
+        elif attribute_name=='flags':
+            df.to_csv(filepath + cavename + '_node_' + attribute_name + '.csv', index=False, header=['id','flag'], sep=';')   
+        elif attribute_name=='comments':
+            df.to_csv(filepath + cavename + '_node_' + attribute_name + '.csv', index=False, header=['id','comment'], sep=';')   
+        elif attribute_name=='idsql':
+            df.to_csv(filepath + cavename + '_node_' + attribute_name + '.csv', index=False, header=['id','idsql'], sep=';')    
+        elif attribute_name=='fulladdress':
+            df.to_csv(filepath + cavename + '_node_' + attribute_name + '.csv', index=False, header=['id','fulladdress'], sep=';')    
+        # print('saved node attribute', attribute_name, ' to ', filepath, cavename, '_node_' , attribute_name , '.csv')
+    
+    #load and save all the existing EDGE attribute names for this graph
+    attribute_names = pr.get_edges_attributes(G)
+    for attribute_name in attribute_names:
+        df = pr.attribute_dict_to_df(G,attribute_name, 'edge')
+        if attribute_name=='flags':
+            df.to_csv(filepath + cavename + '_edge_' + attribute_name + '.csv', index=False, header=['from_id','to_id','flag'], sep=';')   
+  
+        # print('saved edge attribute', attribute_name, ' to ', filepath, cavename, '_edge_', attribute_name, '.csv')
 
 
+
+#----------------------------
+#not sure this one works
+
+def write_graph_to_plt(graph: nx.Graph, basename: str, disco_keys=None):
+    """
+    Reads a networkx.Graph object and writes it to a plt file.
+    developped by Tanguy Racine, UNINE
+    """
+    coords = nx.get_node_attributes(graph, "coord")
+    plt_command = """{type} {y} {x} {z} S{station} P -9 -9 -9 -9"""
+    plt_file = """G18S\nNX D 1 1 1 C{name}.plt\n{points}"""
+    plt_lines = []
+
+    for line in graph.edges:
+        x1, y1, z1 = coords[line[0]]
+        x2, y2, z2 = coords[line[1]]
+
+        plt_lines.append(plt_command.format(
+            type="M", x=x1, y=y1, z = z1, station=line[0]))
+
+        plt_lines.append(plt_command.format(
+            type="D", x=x2, y=y2, z = z2, station=line[1]))
+        
+    if disco_keys != None:
+        for key in disco_keys:
+            x, y, z = coords[key]
+
+        plt_lines.append(plt_command.format(
+            type="M", x=x, y=y, z=z, station=key))            
+
+    with open(f"{basename}.plt", "w+") as f:
+        f.write(
+            plt_file.format(
+                name=basename,
+                points="\n".join(plt_lines),
+            )
+        # )
