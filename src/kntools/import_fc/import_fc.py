@@ -23,6 +23,7 @@ import networkx as nx
 # import sqlite3
 import pandas as pd
 import kntools as kt
+import os
 
 
 
@@ -627,13 +628,23 @@ def from_therion_sql_enhanced(  inputfile,
     # else:
     # return H
 
-def load_clean_graph_csv(inputpath):
+def load_clean_graph_csv(inputpath,
+                         node_attributes=['pos','csdim','flags','fulladdress','idsql','splays','comments'], 
+                         edge_attributes=['flags']):
     """Loads the cave graph from the Github repository erc-karst-repositories/networks_datasets
 
     Parameters
     ----------
     inputpath : string
         path to the folder containing the .csv files 
+    node_attributes: list of string
+        list of the node attribute names to attach to the graph
+        by default: ['pos','csdim','flags','fulladdress','idsql','splays','comments']
+    edge_attributes: list of string
+        list of the edge attribute names to attach to the graph
+        by default: ['flags']
+
+        
 
     Returns
     -------
@@ -642,6 +653,9 @@ def load_clean_graph_csv(inputpath):
     """
 
     G = nx.Graph()
+
+    
+
     for file in os.listdir(inputpath):
         sep='' if inputpath.endswith('/') else '/'
 
@@ -653,43 +667,56 @@ def load_clean_graph_csv(inputpath):
             G.add_edges_from(zip(df.from_id,df.to_id))
 
         # Load Edges flags (if present)
-        elif file.endswith('edge_flags.csv'):
+        elif file.endswith('edge_flags.csv') and 'flags' in edge_attributes:
             print('loading',file)
             df = pd.read_csv(f'{inputpath}{sep}{file}', delimiter=';')
             #create the graph with the edges
-            dict_attribute = kt.list2dict(zip(df.from_id,df.to_id),df.flag)
+            dict_attribute = kt.list2dict(list(zip(df.from_id,df.to_id)),df.flag)
             nx.set_edge_attributes(G, dict_attribute,'flags')
 
         # load node attributes
         else:
-            print('loading',file)
             attribute_name = file.split('.')[0].split('_')[-1]
             df = pd.read_csv(f'{inputpath}{sep}{file}', delimiter=';')
 
-            if attribute_name == 'pos':
+            if attribute_name in node_attributes and attribute_name == 'pos':
+                print(f'loading {file}')
                 #use dict(zip()) when unique entries per node
-                dict_attribute = dict(zip(df.id,zip(df.x,df.y,df.z)))              
+                dict_attribute = dict(zip(df.id,zip(df.x,df.y,df.z))) 
+                nx.set_node_attributes(G,dict_attribute,attribute_name)             
 
-            elif attribute_name == 'csdim':
-                dict_attribute = dict(zip(df.id,zip(df.cswidth,df.csheight)))  
+            elif attribute_name in node_attributes and attribute_name == 'csdim':
+                print(f'loading {file}')
+                dict_attribute = dict(zip(df.id,zip(df.cswidth,df.csheight))) 
+                nx.set_node_attributes(G,dict_attribute,attribute_name) 
 
-            elif attribute_name == 'flags':
+            elif attribute_name in node_attributes and attribute_name == 'flags':
+                print(f'loading {file}')
                 #use kt.list2dict() when mulitple entries per nodes
                 dict_attribute = kt.list2dict(df.id,df.flag)   
+                nx.set_node_attributes(G,dict_attribute,attribute_name)
 
-            elif attribute_name == 'fulladdress':
-                dict_attribute = kt.list2dict(df.id,df.fulladdress)   
+            elif attribute_name in node_attributes and attribute_name == 'fulladdress':
+                print(f'loading {file}')
+                dict_attribute = kt.list2dict(df.id,df.fulladdress)  
+                nx.set_node_attributes(G,dict_attribute,attribute_name) 
 
-            elif attribute_name == 'idsql':
+            elif attribute_name in node_attributes and attribute_name == 'idsql':
+                print(f'loading {file}')
                 dict_attribute = kt.list2dict(df.id,df.idsql)   
+                nx.set_node_attributes(G,dict_attribute,attribute_name)
 
-            elif attribute_name == 'splays':
-                dict_attribute = kt.list2dict(df.id,list(zip(df.x,df.y,df.z)))   
+            elif attribute_name in node_attributes and attribute_name == 'splays':
+                print(f'loading {file}')
+                dict_attribute = kt.list2dict(df.id,list(zip(df.x,df.y,df.z))) 
+                nx.set_node_attributes(G,dict_attribute,attribute_name)  
 
-            elif attribute_name == 'comments':
+            elif attribute_name in node_attributes and attribute_name == 'comments':
+                print(f'loading {file}')
                 dict_attribute = kt.list2dict(df.id,df.comment)   
+                nx.set_node_attributes(G,dict_attribute,attribute_name)
         
-            nx.set_node_attributes(G,dict_attribute,attribute_name)  
+              
 
     return G
 
